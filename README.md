@@ -4,7 +4,7 @@ A compact countdown widget for KDE Plasma 6. I made it because I couldn't find a
 
 ## Use it
 
-Click the widget to open the timer. Type a duration and press **Enter** to start. Durations are limited to 24 hours.
+Click the widget to open the timer. Type a duration and press **Enter** to start.
 
 | Control | Action |
 | --- | --- |
