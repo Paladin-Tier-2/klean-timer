@@ -39,7 +39,7 @@ ln -sfn "$(pwd)" ~/.local/share/plasma/plasmoids/com.eko.cleantimer
 ```
 
 > [!WARNING]
-> **Never** run `kpackagetool6 --upgrade .` if the applet is installed as a symlink (`ln -s`). `kpackagetool6` follows directory symlinks during package uninstallation/upgrade and will recursively wipe the source repository. When developing with a symlink, always reload via `./reload.sh`.
+> **Never** run `kpackagetool6 --upgrade .` if the applet is installed as a symlink. `kpackagetool6` follows directory symlinks during package uninstallation/upgrade and will nuke the repo. When developing with a symlink, use `./reload.sh`- it just restarts the plasmashell.
 
 ### Option B: Static Install
 
