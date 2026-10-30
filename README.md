@@ -28,11 +28,7 @@ Click the widget to open the timer. Type a duration and press **Enter** to start
 
 ## Install
 
-Choose **either Option A or Option B**:
-
 ### Option A: Development (Live Symlink)
-
-Recommended if you want edits to take effect immediately:
 
 ```sh
 mkdir -p ~/.local/share/plasma/plasmoids
