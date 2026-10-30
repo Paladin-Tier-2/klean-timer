@@ -39,7 +39,11 @@ ln -sfn "$(pwd)" ~/.local/share/plasma/plasmoids/com.eko.cleantimer
 ./reload.sh
 ```
 
-Then add **Clean Timer** to a Plasma panel from **Edit Mode → Add Widgets**.
+Then add **Clean Timer** to a Plasma panel:
+
+1. Right click your panel, and click Add or Manage Widgets 
+2. Search for Clean Timers and add it to wherever you want.
+
 
 ### Static Install
 
