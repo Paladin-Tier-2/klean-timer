@@ -2,7 +2,7 @@
 
 A compact countdown widget for KDE Plasma 6. I made it because I couldn't find a timer that was small enough for my panel, quick to set, and usable from the keyboard. The remaining time stays visible on the panel, so I can check it at a glance. When time runs out, a sound plays.
 
-## Use it
+## USE
 
 Click the widget to open the timer. Type a duration and press **Enter** to start.
 
@@ -26,12 +26,13 @@ Click the widget to open the timer. Type a duration and press **Enter** to start
 | **Middle-click** | Pause / resume |
 | **Left-click** | Toggle popup |
 
-
 ## Install
 
-### Development (Live Symlink)
+Choose **either Option A or Option B**:
 
-Link the repository into your Plasma applets directory so edits take effect immediately:
+### Option A: Development (Live Symlink)
+
+Recommended if you want edits to take effect immediately:
 
 ```sh
 mkdir -p ~/.local/share/plasma/plasmoids
@@ -39,13 +40,10 @@ ln -sfn "$(pwd)" ~/.local/share/plasma/plasmoids/com.eko.cleantimer
 ./reload.sh
 ```
 
-Then add **Clean Timer** to a Plasma panel:
+> [!WARNING]
+> **Never** run `kpackagetool6 --upgrade .` if the applet is installed as a symlink (`ln -s`). `kpackagetool6` follows directory symlinks during package uninstallation/upgrade and will recursively wipe the source repository. When developing with a symlink, always reload via `./reload.sh`.
 
-1. Right click your panel, and click Add or Manage Widgets 
-2. Search for Clean Timers and add it to wherever you want.
-
-
-### Static Install
+### Option B: Static Install
 
 To install as an isolated package copy:
 
@@ -53,8 +51,16 @@ To install as an isolated package copy:
 kpackagetool6 --type Plasma/Applet --install .
 ```
 
-> [!WARNING]
-> **Never** run `kpackagetool6 --upgrade .` if the applet is installed as a symlink (`ln -s`). `kpackagetool6` follows directory symlinks during package uninstallation/upgrade and will recursively wipe the source repository. When developing with a symlink, always reload via `./reload.sh`.
+---
+
+### Add to Panel
+
+After installing with either option:
+
+1. Right click your panel, and click **Add or Manage Widgets** 
+2. Search for **Clean Timer** and add it to wherever you want.
+
+Don't forget to bind the "activate widget" to a global shortcut so you can trigger popup anytime you want. The best way to use it.
 
 ## Finish cue
 
