@@ -31,6 +31,8 @@ Click the widget to open the timer. Type a duration and press **Enter** to start
 ### Option A: Development (Live Symlink)
 
 ```sh
+git clone https://github.com/<username>/clean-timer.git
+cd clean-timer
 mkdir -p ~/.local/share/plasma/plasmoids
 ln -sfn "$(pwd)" ~/.local/share/plasma/plasmoids/com.eko.cleantimer
 ./reload.sh
@@ -44,6 +46,8 @@ ln -sfn "$(pwd)" ~/.local/share/plasma/plasmoids/com.eko.cleantimer
 To install as an isolated package copy:
 
 ```sh
+git clone https://github.com/<username>/clean-timer.git
+cd clean-timer
 kpackagetool6 --type Plasma/Applet --install .
 ```
 
