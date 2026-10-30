@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+    <kcfgfile/>
+    <group name="General">
+        <entry name="lastSeconds" type="Int">
+            <default>300</default>
+        </entry>
+        <entry name="runningEndTime" type="Double">
+            <default>0</default>
+        </entry>
+        <entry name="pausedSeconds" type="Int">
+            <default>0</default>
+        </entry>
+        <entry name="iconType" type="String">
+            <default>sleek-circle</default>
+        </entry>
+        <entry name="customSvgPath" type="String">
+            <default></default>
+        </entry>
+        <entry name="autoScale" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="iconSize" type="Int">
+            <default>24</default>
+        </entry>
+        <entry name="timerFontSize" type="Int">
+            <default>13</default>
+        </entry>
+        <entry name="tintIcon" type="Bool">
+            <default>true</default>
+        </entry>
+    </group>
+</kcfg>

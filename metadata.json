@@ -1,0 +1,18 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Ekvin Saleh"
+            }
+        ],
+        "Category": "Date and Time",
+        "Description": "Minimal custom timer with typeable duration",
+        "Icon": "chronometer",
+        "Id": "com.eko.cleantimer",
+        "Name": "Clean Timer",
+        "Version": "1.0.0"
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API": "declarativeappletscript",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}
