@@ -28,13 +28,8 @@ PlasmoidItem {
     property var inputItem: null
     property var compactItem: null
 
-    toolTipMainText: root.isRunning ? i18n("%1 remaining", root.formatTime(root.remainingSeconds)) : i18n("Clean Timer")
-    toolTipSubText: {
-        if (root.isRunning) {
-            return root.isPaused ? i18n("Paused — Middle-click or Space to resume") : i18n("Running — Middle-click or Space to pause\nScroll or Up/Down to adjust");
-        }
-        return i18n("Click to set timer\nScroll or Up/Down to adjust time");
-    }
+    toolTipMainText: ""
+    toolTipSubText: ""
 
     function activatePrimaryAction() {
         if (root.isRunning) {
