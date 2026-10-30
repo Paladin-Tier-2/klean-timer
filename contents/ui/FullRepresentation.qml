@@ -93,7 +93,6 @@ Item {
         event.accepted = true;
     }
 
-    // Plasma may create the popup after the click; defer focus and recheck that it is still open.
     Connections {
         target: full.timer
         function onExpandedChanged() {
