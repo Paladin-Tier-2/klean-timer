@@ -6,17 +6,26 @@ A compact countdown widget for KDE Plasma 6. I made it because I couldn't find a
 
 Click the widget to open the timer. Type a duration and press **Enter** to start.
 
-| Control | Action |
+### Keyboard (in popup)
+
+| Key | Action |
 | --- | --- |
-| **Left / Right** | Select hours, minutes, or seconds |
-| **Up / Down** | Adjust selected unit (+/- 1) |
-| **Shift + Up / Down** | Adjust selected unit (+/- 5h, +/- 5m, +/- 10s) |
-| **Mouse wheel** | Add or subtract minutes (1m normal, 5m with Shift) |
-| **Ctrl + Mouse wheel** | Add or subtract seconds (1s normal, 10s with Shift) |
-| **Middle-click** | Pause or resume |
-| **Space** | Pause or resume |
+| **Left / Right** | Switch unit |
+| **Up / Down** | +/- 1 |
+| **Shift + Up / Down** | +/- 5 (+/- 10 for seconds) |
+| **Space** | Pause / resume |
 | **R** | Reset |
-| **Escape** | Close popup |
+| **Escape** | Close |
+
+### Mouse (on widget)
+
+| Action | Result |
+| --- | --- |
+| **Scroll** | +/- 1 min (5 min with Shift) |
+| **Ctrl + Scroll** | +/- 1 sec (10 sec with Shift) |
+| **Middle-click** | Pause / resume |
+| **Left-click** | Toggle popup |
+
 
 ## Install
 
