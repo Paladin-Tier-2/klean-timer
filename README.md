@@ -8,16 +8,14 @@ Click the widget to open the timer. Type a duration and press **Enter** to start
 
 | Control | Action |
 | --- | --- |
-| **Left / Right** | Select minutes or seconds |
-| **Up / Down** | Add or subtract 1 minute or 1 second, depending on the selection |
-| **Shift + Up / Down** | Add or subtract 5 minutes or 10 seconds |
-| **Space** | Pause or resume a running timer |
+| **Left / Right** | Select hours, minutes, or seconds |
+| **Up / Down** | Adjust selected unit (+/- 1) |
+| **Shift + Up / Down** | Adjust selected unit (+/- 5h, +/- 5m, +/- 10s) |
+| **Mouse wheel** | Add or subtract minutes (1m normal, 5m with Shift) |
+| **Middle-click** | Pause or resume |
+| **Space** | Pause or resume |
 | **R** | Reset |
-| **Escape** | Close the popup |
-| **Mouse wheel** | Adjust the selected unit |
-| **Middle-click on the panel widget** | Pause or resume |
-
-You can also adjust minutes with the buttons in the popup. While a timer is running, the panel widget shows the countdown instead of its icon.
+| **Escape** | Close popup |
 
 ## Install
 

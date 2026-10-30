@@ -96,23 +96,13 @@ MouseArea {
         }
     }
 
-    Keys.onLeftPressed: event => {
-        compactRoot.timer.adjustUnit = "minutes";
-        event.accepted = true;
-    }
-
-    Keys.onRightPressed: event => {
-        compactRoot.timer.adjustUnit = "seconds";
-        event.accepted = true;
-    }
-
     Keys.onUpPressed: event => {
-        compactRoot.timer.adjustTime(1, event.modifiers & Qt.ShiftModifier);
+        compactRoot.timer.adjustMinutes(1, event.modifiers & Qt.ShiftModifier);
         event.accepted = true;
     }
 
     Keys.onDownPressed: event => {
-        compactRoot.timer.adjustTime(-1, event.modifiers & Qt.ShiftModifier);
+        compactRoot.timer.adjustMinutes(-1, event.modifiers & Qt.ShiftModifier);
         event.accepted = true;
     }
 
@@ -126,7 +116,7 @@ MouseArea {
     }
 
     onWheel: wheel => {
-        compactRoot.timer.adjustTime(wheel.angleDelta.y > 0 ? 1 : -1, false);
+        compactRoot.timer.adjustMinutes(wheel.angleDelta.y > 0 ? 1 : -1, wheel.modifiers & Qt.ShiftModifier);
     }
 
     Item {

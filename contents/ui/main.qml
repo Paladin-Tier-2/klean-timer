@@ -164,10 +164,8 @@ PlasmoidItem {
     }
 
     function adjustMinutes(stepDirection, isShift) {
-        var oldUnit = root.adjustUnit;
         root.adjustUnit = "minutes";
         root.adjustTime(stepDirection, isShift);
-        root.adjustUnit = oldUnit;
     }
 
     function applyDigit(d) {
