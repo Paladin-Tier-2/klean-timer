@@ -36,14 +36,6 @@ PlasmoidItem {
         return i18n("Click to set timer\nScroll or Up/Down to adjust time");
     }
 
-    function resolveSoundPath() {
-        var localUrl = Qt.resolvedUrl("../sounds/alarm-clock-elapsed.oga").toString();
-        if (localUrl.startsWith("file://")) {
-            return decodeURIComponent(localUrl.substring(7));
-        }
-        return "/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga";
-    }
-
     function formatTime(sec) {
         sec = Math.max(0, parseInt(sec) || 0);
         var h = Math.floor(sec / 3600);
@@ -122,6 +114,19 @@ PlasmoidItem {
         }
     }
 
+    function startFromInput() {
+        var parsed = root.inputItem ? root.parseTimeInput(root.inputItem.text) : root.totalSeconds;
+        if (parsed > 0) {
+            root.startTimer(parsed);
+            root.expanded = false;
+        } else if (root.totalSeconds > 0) {
+            root.startTimer(root.totalSeconds);
+            root.expanded = false;
+        } else {
+            root.adjustTime(1, false);
+        }
+    }
+
     function togglePause() {
         if (root.isRunning) {
             if (!root.isPaused) {
@@ -159,6 +164,14 @@ PlasmoidItem {
         }
     }
 
+    function activatePrimaryAction() {
+        if (root.isRunning) {
+            root.togglePause();
+        } else {
+            root.startFromInput();
+        }
+    }
+
     function resetTimer() {
         root.digitBuffer = "";
         if (!root.isRunning && root.remainingSeconds === 0) {
@@ -173,6 +186,21 @@ PlasmoidItem {
             plasmoid.configuration.pausedSeconds = 0;
         }
         root.focusInput();
+    }
+
+    function resolveSoundPath() {
+        var localUrl = Qt.resolvedUrl("../sounds/alarm-clock-elapsed.oga").toString();
+        if (localUrl.startsWith("file://")) {
+            return decodeURIComponent(localUrl.substring(7));
+        }
+        return "/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga";
+    }
+
+    function onTimerFinished() {
+        plasmoid.configuration.runningEndTime = 0;
+        plasmoid.configuration.pausedSeconds = 0;
+        var soundPath = root.resolveSoundPath();
+        executable.exec("paplay --property=media.role=alarm --volume=" + root.maxPulseVolume + " \"" + soundPath + "\" || pw-play --media-role=Notification --media-category=Playback --volume=1.0 \"" + soundPath + "\"");
     }
 
     function adjustTime(stepDirection, isShift) {
@@ -211,77 +239,6 @@ PlasmoidItem {
             }
         } else {
             root.totalSeconds = Math.min(limit, Math.max(0, root.totalSeconds + totalChange));
-            plasmoid.configuration.lastSeconds = root.totalSeconds;
-            if (root.inputItem) {
-                root.inputItem.text = root.formatTime(root.totalSeconds);
-                root.selectActiveUnit();
-            }
-        }
-    }
-
-    function clearCurrentUnit() {
-        root.digitBuffer = "";
-        var sec = (root.isRunning && root.isPaused) ? root.remainingSeconds : root.totalSeconds;
-        var h = Math.floor(sec / 3600);
-        var m = Math.floor((sec % 3600) / 60);
-        var s = sec % 60;
-        if (root.adjustUnit === "hours") {
-            h = 0;
-            root.adjustUnit = "minutes";
-        } else if (root.adjustUnit === "minutes") {
-            m = 0;
-        } else {
-            s = 0;
-        }
-        var nextSec = (h * 3600) + (m * 60) + s;
-        if (root.isRunning && root.isPaused) {
-            root.remainingSeconds = Math.max(1, nextSec);
-            plasmoid.configuration.pausedSeconds = root.remainingSeconds;
-            if (root.inputItem) {
-                root.inputItem.text = root.formatTime(root.remainingSeconds);
-                root.selectActiveUnit();
-            }
-        } else {
-            root.totalSeconds = nextSec;
-            plasmoid.configuration.lastSeconds = root.totalSeconds;
-            if (root.inputItem) {
-                root.inputItem.text = root.formatTime(root.totalSeconds);
-                root.selectActiveUnit();
-            }
-        }
-    }
-
-    function applyDigit(d) {
-        var sec = (root.isRunning && root.isPaused) ? root.remainingSeconds : root.totalSeconds;
-        var h = Math.floor(sec / 3600);
-        var m = Math.floor((sec % 3600) / 60);
-        var s = sec % 60;
-
-        if (root.digitBuffer.length === 0) {
-            root.digitBuffer = d;
-            var val = parseInt(d);
-            if (root.adjustUnit === "hours") h = val;
-            else if (root.adjustUnit === "minutes") m = val;
-            else s = val;
-        } else {
-            var val2 = parseInt(root.digitBuffer + d);
-            root.digitBuffer = "";
-            var maxH = (root && root.maxHours) || 23;
-            var maxMS = (root && root.maxMinutesOrSeconds) || 59;
-            if (root.adjustUnit === "hours") h = Math.min(maxH, val2);
-            else if (root.adjustUnit === "minutes") m = Math.min(maxMS, val2);
-            else s = Math.min(maxMS, val2);
-        }
-        var nextSec = (h * 3600) + (m * 60) + s;
-        if (root.isRunning && root.isPaused) {
-            root.remainingSeconds = Math.max(1, nextSec);
-            plasmoid.configuration.pausedSeconds = root.remainingSeconds;
-            if (root.inputItem) {
-                root.inputItem.text = root.formatTime(root.remainingSeconds);
-                root.selectActiveUnit();
-            }
-        } else {
-            root.totalSeconds = nextSec;
             plasmoid.configuration.lastSeconds = root.totalSeconds;
             if (root.inputItem) {
                 root.inputItem.text = root.formatTime(root.totalSeconds);
@@ -365,6 +322,77 @@ PlasmoidItem {
         }
     }
 
+    function applyDigit(d) {
+        var sec = (root.isRunning && root.isPaused) ? root.remainingSeconds : root.totalSeconds;
+        var h = Math.floor(sec / 3600);
+        var m = Math.floor((sec % 3600) / 60);
+        var s = sec % 60;
+
+        if (root.digitBuffer.length === 0) {
+            root.digitBuffer = d;
+            var val = parseInt(d);
+            if (root.adjustUnit === "hours") h = val;
+            else if (root.adjustUnit === "minutes") m = val;
+            else s = val;
+        } else {
+            var val2 = parseInt(root.digitBuffer + d);
+            root.digitBuffer = "";
+            var maxH = (root && root.maxHours) || 23;
+            var maxMS = (root && root.maxMinutesOrSeconds) || 59;
+            if (root.adjustUnit === "hours") h = Math.min(maxH, val2);
+            else if (root.adjustUnit === "minutes") m = Math.min(maxMS, val2);
+            else s = Math.min(maxMS, val2);
+        }
+        var nextSec = (h * 3600) + (m * 60) + s;
+        if (root.isRunning && root.isPaused) {
+            root.remainingSeconds = Math.max(1, nextSec);
+            plasmoid.configuration.pausedSeconds = root.remainingSeconds;
+            if (root.inputItem) {
+                root.inputItem.text = root.formatTime(root.remainingSeconds);
+                root.selectActiveUnit();
+            }
+        } else {
+            root.totalSeconds = nextSec;
+            plasmoid.configuration.lastSeconds = root.totalSeconds;
+            if (root.inputItem) {
+                root.inputItem.text = root.formatTime(root.totalSeconds);
+                root.selectActiveUnit();
+            }
+        }
+    }
+
+    function clearCurrentUnit() {
+        root.digitBuffer = "";
+        var sec = (root.isRunning && root.isPaused) ? root.remainingSeconds : root.totalSeconds;
+        var h = Math.floor(sec / 3600);
+        var m = Math.floor((sec % 3600) / 60);
+        var s = sec % 60;
+        if (root.adjustUnit === "hours") {
+            h = 0;
+            root.adjustUnit = "minutes";
+        } else if (root.adjustUnit === "minutes") {
+            m = 0;
+        } else {
+            s = 0;
+        }
+        var nextSec = (h * 3600) + (m * 60) + s;
+        if (root.isRunning && root.isPaused) {
+            root.remainingSeconds = Math.max(1, nextSec);
+            plasmoid.configuration.pausedSeconds = root.remainingSeconds;
+            if (root.inputItem) {
+                root.inputItem.text = root.formatTime(root.remainingSeconds);
+                root.selectActiveUnit();
+            }
+        } else {
+            root.totalSeconds = nextSec;
+            plasmoid.configuration.lastSeconds = root.totalSeconds;
+            if (root.inputItem) {
+                root.inputItem.text = root.formatTime(root.totalSeconds);
+                root.selectActiveUnit();
+            }
+        }
+    }
+
     function focusInput() {
         Qt.callLater(() => {
             if (root.inputItem && root.inputItem.visible) {
@@ -374,34 +402,6 @@ PlasmoidItem {
                 root.selectActiveUnit();
             }
         });
-    }
-
-    function startFromInput() {
-        var parsed = root.inputItem ? root.parseTimeInput(root.inputItem.text) : root.totalSeconds;
-        if (parsed > 0) {
-            root.startTimer(parsed);
-            root.expanded = false;
-        } else if (root.totalSeconds > 0) {
-            root.startTimer(root.totalSeconds);
-            root.expanded = false;
-        } else {
-            root.adjustTime(1, false);
-        }
-    }
-
-    function activatePrimaryAction() {
-        if (root.isRunning) {
-            root.togglePause();
-        } else {
-            root.startFromInput();
-        }
-    }
-
-    function onTimerFinished() {
-        plasmoid.configuration.runningEndTime = 0;
-        plasmoid.configuration.pausedSeconds = 0;
-        var soundPath = root.resolveSoundPath();
-        executable.exec("paplay --property=media.role=alarm --volume=" + root.maxPulseVolume + " \"" + soundPath + "\" || pw-play --media-role=Notification --media-category=Playback --volume=1.0 \"" + soundPath + "\"");
     }
 
     Timer {
