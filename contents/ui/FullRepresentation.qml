@@ -316,7 +316,7 @@ Item {
             QQC2.Button {
                 Layout.fillWidth: true
                 Layout.preferredHeight: Kirigami.Units.gridUnit * full.actionButtonGridHeight
-                text: i18n("Reset (R)")
+                text: i18n("Reset")
                 icon.name: "media-playback-stop"
                 focusPolicy: Qt.NoFocus
                 enabled: full.timer.isRunning || full.timer.remainingSeconds > 0 || full.timer.totalSeconds > 0

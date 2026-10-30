@@ -79,7 +79,7 @@ KCM.SimpleKCM {
                         Layout.alignment: Qt.AlignHCenter
 
                         QQC2.Label {
-                            text: i18n("Idle (Icon)")
+                            text: i18n("Idle")
                             font.pointSize: 9
                             color: Kirigami.Theme.disabledTextColor
                             Layout.alignment: Qt.AlignHCenter
@@ -113,7 +113,7 @@ KCM.SimpleKCM {
                         Layout.alignment: Qt.AlignHCenter
 
                         QQC2.Label {
-                            text: i18n("Running (Digits)")
+                            text: i18n("Running")
                             font.pointSize: 9
                             color: Kirigami.Theme.disabledTextColor
                             Layout.alignment: Qt.AlignHCenter
@@ -224,18 +224,9 @@ KCM.SimpleKCM {
         QQC2.CheckBox {
             id: autoScaleCheck
             Kirigami.FormData.label: i18n("Scaling:")
-            text: i18n("Scale automatically with panel thickness (Recommended)")
+            text: i18n("Scale automatically with panel thickness")
             checked: root.cfg_autoScale
             onToggled: root.cfg_autoScale = checked
-        }
-
-        QQC2.Label {
-            visible: root.cfg_autoScale
-            text: i18n("The icon and countdown size automatically adjust to your KDE panel configuration.")
-            font.pointSize: 9
-            color: Kirigami.Theme.disabledTextColor
-            Layout.fillWidth: true
-            wrapMode: Text.WordWrap
         }
 
         RowLayout {
