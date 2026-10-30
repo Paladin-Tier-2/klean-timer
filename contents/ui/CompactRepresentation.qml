@@ -97,12 +97,20 @@ MouseArea {
     }
 
     Keys.onUpPressed: event => {
-        compactRoot.timer.adjustMinutes(1, event.modifiers & Qt.ShiftModifier);
+        if (event.modifiers & Qt.ControlModifier) {
+            compactRoot.timer.adjustSeconds(1, event.modifiers & Qt.ShiftModifier);
+        } else {
+            compactRoot.timer.adjustMinutes(1, event.modifiers & Qt.ShiftModifier);
+        }
         event.accepted = true;
     }
 
     Keys.onDownPressed: event => {
-        compactRoot.timer.adjustMinutes(-1, event.modifiers & Qt.ShiftModifier);
+        if (event.modifiers & Qt.ControlModifier) {
+            compactRoot.timer.adjustSeconds(-1, event.modifiers & Qt.ShiftModifier);
+        } else {
+            compactRoot.timer.adjustMinutes(-1, event.modifiers & Qt.ShiftModifier);
+        }
         event.accepted = true;
     }
 
@@ -116,7 +124,13 @@ MouseArea {
     }
 
     onWheel: wheel => {
-        compactRoot.timer.adjustMinutes(wheel.angleDelta.y > 0 ? 1 : -1, wheel.modifiers & Qt.ShiftModifier);
+        var dir = wheel.angleDelta.y > 0 ? 1 : -1;
+        var isShift = wheel.modifiers & Qt.ShiftModifier;
+        if (wheel.modifiers & Qt.ControlModifier) {
+            compactRoot.timer.adjustSeconds(dir, isShift);
+        } else {
+            compactRoot.timer.adjustMinutes(dir, isShift);
+        }
     }
 
     Item {

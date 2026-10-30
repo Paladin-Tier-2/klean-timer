@@ -167,6 +167,51 @@ def test_adjust_minutes_consistency():
     print("PASS: adjustMinutes consistently adds minutes regardless of prior unit")
 
 
+def test_adjust_seconds_consistency():
+    source = SOURCE.read_text()
+    engine = QJSEngine()
+    engine.evaluate(block_at(source, "function formatTime("))
+    engine.evaluate(block_at(source, "function parseTimeInput("))
+    engine.evaluate(block_at(source, "function adjustTime("))
+    engine.evaluate(block_at(source, "function adjustSeconds("))
+
+    js = """
+        var plasmoid = { configuration: { lastSeconds: 0, runningEndTime: 0, pausedSeconds: 0 } };
+        var root = {
+            totalSeconds: 60,
+            remainingSeconds: 0,
+            isRunning: false,
+            isPaused: false,
+            adjustUnit: "minutes",
+            inputItem: { text: "01:00", visible: true },
+            formatTime: formatTime,
+            parseTimeInput: parseTimeInput,
+            selectActiveUnit: function() {}
+        };
+        root.adjustTime = adjustTime;
+        root.adjustSeconds = adjustSeconds;
+
+        root.adjustSeconds(1, false);
+        var t1 = root.totalSeconds;
+        var unit1 = root.adjustUnit;
+
+        root.adjustSeconds(-1, false);
+        var t2 = root.totalSeconds;
+
+        root.adjustSeconds(1, true);
+        var t3 = root.totalSeconds;
+
+        ({ t1: t1, unit1: unit1, t2: t2, t3: t3 })
+    """
+    res = engine.evaluate(js)
+    assert not res.isError(), res.toString()
+    obj = res.toVariant()
+    assert obj["t1"] == 61 and obj["unit1"] == "seconds", f"adjustSeconds up failed: {obj}"
+    assert obj["t2"] == 60, f"adjustSeconds down failed: {obj}"
+    assert obj["t3"] == 70, f"adjustSeconds shift failed: {obj}"
+    print("PASS: adjustSeconds consistently adds seconds regardless of prior unit")
+
+
 def test_timer_reset_and_state():
     source = SOURCE.read_text()
     target_time = re.search(r"property real targetEndTime:\s*(.+)", source).group(1)
@@ -690,6 +735,7 @@ def main():
     test_parse_time_input()
     test_adjust_time_from_zero()
     test_adjust_minutes_consistency()
+    test_adjust_seconds_consistency()
     test_timer_reset_and_state()
     test_enter_does_not_immediately_pause_timer()
     test_space_key_starts_timer_without_eating_characters()

@@ -82,7 +82,13 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: full.timer.togglePause()
                     onWheel: wheel => {
-                        full.timer.adjustMinutes(wheel.angleDelta.y > 0 ? 1 : -1, wheel.modifiers & Qt.ShiftModifier);
+                        var dir = wheel.angleDelta.y > 0 ? 1 : -1;
+                        var isShift = wheel.modifiers & Qt.ShiftModifier;
+                        if (wheel.modifiers & Qt.ControlModifier) {
+                            full.timer.adjustSeconds(dir, isShift);
+                        } else {
+                            full.timer.adjustMinutes(dir, isShift);
+                        }
                     }
                 }
             }
@@ -142,7 +148,13 @@ Item {
 
                 WheelHandler {
                     onWheel: event => {
-                        full.timer.adjustMinutes(event.angleDelta.y > 0 ? 1 : -1, event.modifiers & Qt.ShiftModifier);
+                        var dir = event.angleDelta.y > 0 ? 1 : -1;
+                        var isShift = event.modifiers & Qt.ShiftModifier;
+                        if (event.modifiers & Qt.ControlModifier) {
+                            full.timer.adjustSeconds(dir, isShift);
+                        } else {
+                            full.timer.adjustMinutes(dir, isShift);
+                        }
                     }
                 }
 

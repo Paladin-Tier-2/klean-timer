@@ -168,6 +168,11 @@ PlasmoidItem {
         root.adjustTime(stepDirection, isShift);
     }
 
+    function adjustSeconds(stepDirection, isShift) {
+        root.adjustUnit = "seconds";
+        root.adjustTime(stepDirection, isShift);
+    }
+
     function applyDigit(d) {
         var sec = (root.isRunning && root.isPaused) ? root.remainingSeconds : root.totalSeconds;
         var h = Math.floor(sec / 3600);

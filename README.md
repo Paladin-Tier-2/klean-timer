@@ -12,6 +12,7 @@ Click the widget to open the timer. Type a duration and press **Enter** to start
 | **Up / Down** | Adjust selected unit (+/- 1) |
 | **Shift + Up / Down** | Adjust selected unit (+/- 5h, +/- 5m, +/- 10s) |
 | **Mouse wheel** | Add or subtract minutes (1m normal, 5m with Shift) |
+| **Ctrl + Mouse wheel** | Add or subtract seconds (1s normal, 10s with Shift) |
 | **Middle-click** | Pause or resume |
 | **Space** | Pause or resume |
 | **R** | Reset |
