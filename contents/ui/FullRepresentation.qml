@@ -40,88 +40,6 @@ Item {
         }
     }
 
-    Keys.onEscapePressed: event => {
-        full.timer.expanded = false;
-        event.accepted = true;
-    }
-
-    Keys.onSpacePressed: event => {
-        full.timer.activatePrimaryAction();
-        event.accepted = true;
-    }
-
-    Keys.onPressed: event => {
-        if (event.key === Qt.Key_R) {
-            full.timer.resetTimer();
-            event.accepted = true;
-        }
-    }
-
-    Keys.onLeftPressed: event => {
-        full.timer.selectPreviousUnit();
-        event.accepted = true;
-    }
-
-    Keys.onRightPressed: event => {
-        full.timer.selectNextUnit();
-        event.accepted = true;
-    }
-
-    Keys.onUpPressed: event => {
-        if (!full.timer.isRunning && full.timer.inputItem && full.timer.inputItem.visible) {
-            full.timer.inputItem.forceActiveFocus();
-        }
-        full.timer.adjustTime(1, event.modifiers & Qt.ShiftModifier);
-        event.accepted = true;
-    }
-
-    Keys.onDownPressed: event => {
-        if (!full.timer.isRunning && full.timer.inputItem && full.timer.inputItem.visible) {
-            full.timer.inputItem.forceActiveFocus();
-        }
-        full.timer.adjustTime(-1, event.modifiers & Qt.ShiftModifier);
-        event.accepted = true;
-    }
-
-    Keys.onReturnPressed: event => {
-        full.timer.activatePrimaryAction();
-        event.accepted = true;
-    }
-
-    Keys.onEnterPressed: event => {
-        full.timer.activatePrimaryAction();
-        event.accepted = true;
-    }
-
-    Connections {
-        target: full.timer
-        function onExpandedChanged() {
-            if (full.timer.expanded) {
-                Qt.callLater(() => {
-                    if (full.timer.expanded) full.focusCurrentControl();
-                });
-            } else {
-                if (full.timer.compactItem) {
-                    full.timer.compactItem.forceActiveFocus();
-                }
-            }
-        }
-        function onIsRunningChanged() {
-            if (full.timer.expanded) {
-                Qt.callLater(() => {
-                    if (full.timer.expanded) full.focusCurrentControl();
-                });
-            }
-        }
-        function onIsPausedChanged() {
-            if (full.timer.expanded) {
-                Qt.callLater(() => {
-                    if (full.timer.expanded) full.focusCurrentControl();
-                });
-            }
-        }
-    }
-
     MouseArea {
         anchors.fill: parent
         z: -1
@@ -222,9 +140,10 @@ Item {
                     }
                 }
 
-                Keys.onEscapePressed: event => {
-                    full.timer.expanded = false;
-                    event.accepted = true;
+                WheelHandler {
+                    onWheel: event => {
+                        full.timer.adjustTime(event.angleDelta.y > 0 ? 1 : -1, event.modifiers & Qt.ShiftModifier);
+                    }
                 }
 
                 Keys.onLeftPressed: event => {
@@ -237,12 +156,6 @@ Item {
                     event.accepted = true;
                 }
 
-                WheelHandler {
-                    onWheel: event => {
-                        full.timer.adjustTime(event.angleDelta.y > 0 ? 1 : -1, event.modifiers & Qt.ShiftModifier);
-                    }
-                }
-
                 Keys.onUpPressed: event => {
                     full.timer.adjustTime(1, event.modifiers & Qt.ShiftModifier);
                     event.accepted = true;
@@ -250,6 +163,26 @@ Item {
 
                 Keys.onDownPressed: event => {
                     full.timer.adjustTime(-1, event.modifiers & Qt.ShiftModifier);
+                    event.accepted = true;
+                }
+
+                Keys.onEscapePressed: event => {
+                    full.timer.expanded = false;
+                    event.accepted = true;
+                }
+
+                Keys.onSpacePressed: event => {
+                    full.timer.activatePrimaryAction();
+                    event.accepted = true;
+                }
+
+                Keys.onReturnPressed: event => {
+                    full.timer.activatePrimaryAction();
+                    event.accepted = true;
+                }
+
+                Keys.onEnterPressed: event => {
+                    full.timer.activatePrimaryAction();
                     event.accepted = true;
                 }
 
@@ -275,21 +208,6 @@ Item {
                         event.accepted = true;
                         return;
                     }
-                }
-
-                Keys.onSpacePressed: event => {
-                    full.timer.activatePrimaryAction();
-                    event.accepted = true;
-                }
-
-                Keys.onReturnPressed: event => {
-                    full.timer.activatePrimaryAction();
-                    event.accepted = true;
-                }
-
-                Keys.onEnterPressed: event => {
-                    full.timer.activatePrimaryAction();
-                    event.accepted = true;
                 }
             }
         }
@@ -337,11 +255,6 @@ Item {
                 icon.name: !full.timer.isRunning ? "media-playback-start" : (full.timer.isPaused ? "media-playback-start" : "media-playback-pause")
                 highlighted: true
 
-                Keys.onEscapePressed: event => {
-                    full.timer.expanded = false;
-                    event.accepted = true;
-                }
-
                 Keys.onLeftPressed: event => {
                     full.timer.selectPreviousUnit();
                     event.accepted = true;
@@ -368,16 +281,14 @@ Item {
                     event.accepted = true;
                 }
 
-                Keys.onSpacePressed: event => {
-                    full.timer.activatePrimaryAction();
+                Keys.onEscapePressed: event => {
+                    full.timer.expanded = false;
                     event.accepted = true;
                 }
 
-                Keys.onPressed: event => {
-                    if (event.key === Qt.Key_R) {
-                        full.timer.resetTimer();
-                        event.accepted = true;
-                    }
+                Keys.onSpacePressed: event => {
+                    full.timer.activatePrimaryAction();
+                    event.accepted = true;
                 }
 
                 Keys.onReturnPressed: event => {
@@ -388,6 +299,13 @@ Item {
                 Keys.onEnterPressed: event => {
                     full.timer.activatePrimaryAction();
                     event.accepted = true;
+                }
+
+                Keys.onPressed: event => {
+                    if (event.key === Qt.Key_R) {
+                        full.timer.resetTimer();
+                        event.accepted = true;
+                    }
                 }
 
                 onClicked: {
@@ -407,5 +325,87 @@ Item {
                 }
             }
         }
+    }
+
+    Connections {
+        target: full.timer
+        function onExpandedChanged() {
+            if (full.timer.expanded) {
+                Qt.callLater(() => {
+                    if (full.timer.expanded) full.focusCurrentControl();
+                });
+            } else {
+                if (full.timer.compactItem) {
+                    full.timer.compactItem.forceActiveFocus();
+                }
+            }
+        }
+        function onIsRunningChanged() {
+            if (full.timer.expanded) {
+                Qt.callLater(() => {
+                    if (full.timer.expanded) full.focusCurrentControl();
+                });
+            }
+        }
+        function onIsPausedChanged() {
+            if (full.timer.expanded) {
+                Qt.callLater(() => {
+                    if (full.timer.expanded) full.focusCurrentControl();
+                });
+            }
+        }
+    }
+
+    Keys.onEscapePressed: event => {
+        full.timer.expanded = false;
+        event.accepted = true;
+    }
+
+    Keys.onSpacePressed: event => {
+        full.timer.activatePrimaryAction();
+        event.accepted = true;
+    }
+
+    Keys.onPressed: event => {
+        if (event.key === Qt.Key_R) {
+            full.timer.resetTimer();
+            event.accepted = true;
+        }
+    }
+
+    Keys.onLeftPressed: event => {
+        full.timer.selectPreviousUnit();
+        event.accepted = true;
+    }
+
+    Keys.onRightPressed: event => {
+        full.timer.selectNextUnit();
+        event.accepted = true;
+    }
+
+    Keys.onUpPressed: event => {
+        if (!full.timer.isRunning && full.timer.inputItem && full.timer.inputItem.visible) {
+            full.timer.inputItem.forceActiveFocus();
+        }
+        full.timer.adjustTime(1, event.modifiers & Qt.ShiftModifier);
+        event.accepted = true;
+    }
+
+    Keys.onDownPressed: event => {
+        if (!full.timer.isRunning && full.timer.inputItem && full.timer.inputItem.visible) {
+            full.timer.inputItem.forceActiveFocus();
+        }
+        full.timer.adjustTime(-1, event.modifiers & Qt.ShiftModifier);
+        event.accepted = true;
+    }
+
+    Keys.onReturnPressed: event => {
+        full.timer.activatePrimaryAction();
+        event.accepted = true;
+    }
+
+    Keys.onEnterPressed: event => {
+        full.timer.activatePrimaryAction();
+        event.accepted = true;
     }
 }

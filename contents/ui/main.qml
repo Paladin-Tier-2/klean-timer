@@ -36,81 +36,11 @@ PlasmoidItem {
         return i18n("Click to set timer\nScroll or Up/Down to adjust time");
     }
 
-    function formatTime(sec) {
-        sec = Math.max(0, parseInt(sec) || 0);
-        var h = Math.floor(sec / 3600);
-        var m = Math.floor((sec % 3600) / 60);
-        var s = sec % 60;
-        var pad = function(n) { return n < 10 ? "0" + n : "" + n; };
-        if (h > 0) {
-            return pad(h) + ":" + pad(m) + ":" + pad(s);
-        }
-        return pad(m) + ":" + pad(s);
-    }
-
-    function parseTimeInput(str) {
-        var limit = (typeof root !== "undefined" && root.maxSeconds) ? root.maxSeconds : 86400;
-        var maxUnit = (typeof root !== "undefined" && root.maxMinutesOrSeconds) ? root.maxMinutesOrSeconds : 59;
-        str = ("" + str).trim().toLowerCase();
-        if (!str) return 0;
-
-        if (str.includes(":")) {
-            var parts = str.split(":");
-            if (parts.length === 2) {
-                if (!/^\d*$/.test(parts[0]) || !/^\d*$/.test(parts[1])) return -1;
-                var m = parseInt(parts[0]) || 0;
-                var s = parseInt(parts[1]) || 0;
-                s = Math.min(maxUnit, Math.max(0, s));
-                m = Math.max(0, m);
-                return Math.min(limit, (m * 60) + s);
-            } else if (parts.length === 3) {
-                if (!/^\d*$/.test(parts[0]) || !/^\d*$/.test(parts[1]) || !/^\d*$/.test(parts[2])) return -1;
-                var h = parseInt(parts[0]) || 0;
-                var m = parseInt(parts[1]) || 0;
-                var s = parseInt(parts[2]) || 0;
-                s = Math.min(maxUnit, Math.max(0, s));
-                m = Math.min(maxUnit, Math.max(0, m));
-                h = Math.max(0, h);
-                return Math.min(limit, (h * 3600) + (m * 60) + s);
-            }
-            return -1;
-        }
-
-        var total = 0;
-        var matched = false;
-        var hMatch = str.match(/(\d+)\s*h/);
-        if (hMatch) { total += parseInt(hMatch[1]) * 3600; matched = true; }
-        var mMatch = str.match(/(\d+)\s*m/);
-        if (mMatch) { total += parseInt(mMatch[1]) * 60; matched = true; }
-        var sMatch = str.match(/(\d+)\s*s/);
-        if (sMatch) { total += parseInt(sMatch[1]); matched = true; }
-
-        if (matched) {
-            var stripped = str.replace(/\d+\s*h/g, "").replace(/\d+\s*m/g, "").replace(/\d+\s*s/g, "").trim();
-            if (stripped.length > 0) return -1;
-            return Math.min(limit, total);
-        }
-
-        if (/^\d+$/.test(str)) {
-            var num = parseInt(str);
-            if (!isNaN(num) && num >= 0) {
-                return Math.min(limit, num * 60);
-            }
-        }
-        return -1;
-    }
-
-    function startTimer(seconds) {
-        if (seconds > 0) {
-            var limit = (root && root.maxSeconds) || 86400;
-            root.totalSeconds = Math.min(limit, seconds);
-            plasmoid.configuration.lastSeconds = root.totalSeconds;
-            root.remainingSeconds = root.totalSeconds;
-            root.targetEndTime = Date.now() + (root.totalSeconds * 1000);
-            plasmoid.configuration.pausedSeconds = 0;
-            plasmoid.configuration.runningEndTime = root.targetEndTime;
-            root.isRunning = true;
-            root.isPaused = false;
+    function activatePrimaryAction() {
+        if (root.isRunning) {
+            root.togglePause();
+        } else {
+            root.startFromInput();
         }
     }
 
@@ -124,6 +54,20 @@ PlasmoidItem {
             root.expanded = false;
         } else {
             root.adjustTime(1, false);
+        }
+    }
+
+    function startTimer(seconds) {
+        if (seconds > 0) {
+            var limit = (root && root.maxSeconds) || 86400;
+            root.totalSeconds = Math.min(limit, seconds);
+            plasmoid.configuration.lastSeconds = root.totalSeconds;
+            root.remainingSeconds = root.totalSeconds;
+            root.targetEndTime = Date.now() + (root.totalSeconds * 1000);
+            plasmoid.configuration.pausedSeconds = 0;
+            plasmoid.configuration.runningEndTime = root.targetEndTime;
+            root.isRunning = true;
+            root.isPaused = false;
         }
     }
 
@@ -164,14 +108,6 @@ PlasmoidItem {
         }
     }
 
-    function activatePrimaryAction() {
-        if (root.isRunning) {
-            root.togglePause();
-        } else {
-            root.startFromInput();
-        }
-    }
-
     function resetTimer() {
         root.digitBuffer = "";
         if (!root.isRunning && root.remainingSeconds === 0) {
@@ -186,21 +122,6 @@ PlasmoidItem {
             plasmoid.configuration.pausedSeconds = 0;
         }
         root.focusInput();
-    }
-
-    function resolveSoundPath() {
-        var localUrl = Qt.resolvedUrl("../sounds/alarm-clock-elapsed.oga").toString();
-        if (localUrl.startsWith("file://")) {
-            return decodeURIComponent(localUrl.substring(7));
-        }
-        return "/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga";
-    }
-
-    function onTimerFinished() {
-        plasmoid.configuration.runningEndTime = 0;
-        plasmoid.configuration.pausedSeconds = 0;
-        var soundPath = root.resolveSoundPath();
-        executable.exec("paplay --property=media.role=alarm --volume=" + root.maxPulseVolume + " \"" + soundPath + "\" || pw-play --media-role=Notification --media-category=Playback --volume=1.0 \"" + soundPath + "\"");
     }
 
     function adjustTime(stepDirection, isShift) {
@@ -252,74 +173,6 @@ PlasmoidItem {
         root.adjustUnit = "minutes";
         root.adjustTime(stepDirection, isShift);
         root.adjustUnit = oldUnit;
-    }
-
-    function selectPreviousUnit() {
-        root.digitBuffer = "";
-        var sec = (root.isRunning && root.isPaused) ? root.remainingSeconds : root.totalSeconds;
-        var str = root.inputItem ? root.inputItem.text : root.formatTime(sec);
-        var parts = str.split(":");
-        if (parts.length === 3) {
-            if (root.adjustUnit === "seconds") {
-                root.adjustUnit = "minutes";
-            } else if (root.adjustUnit === "minutes") {
-                root.adjustUnit = "hours";
-            }
-        } else {
-            root.adjustUnit = "minutes";
-        }
-        root.selectActiveUnit();
-    }
-
-    function selectNextUnit() {
-        root.digitBuffer = "";
-        var sec = (root.isRunning && root.isPaused) ? root.remainingSeconds : root.totalSeconds;
-        var str = root.inputItem ? root.inputItem.text : root.formatTime(sec);
-        var parts = str.split(":");
-        if (parts.length === 3) {
-            if (root.adjustUnit === "hours") {
-                root.adjustUnit = "minutes";
-            } else if (root.adjustUnit === "minutes") {
-                root.adjustUnit = "seconds";
-            }
-        } else {
-            root.adjustUnit = "seconds";
-        }
-        root.selectActiveUnit();
-    }
-
-    function selectActiveUnit() {
-        if (!root.inputItem || !root.inputItem.visible) return;
-        if (!root.inputItem.activeFocus) {
-            root.inputItem.forceActiveFocus();
-        }
-        var str = root.inputItem.text;
-        var parts = str.split(":");
-        if (parts.length === 3) {
-            var firstColon = str.indexOf(":");
-            var lastColon = str.lastIndexOf(":");
-            if (root.adjustUnit === "hours") {
-                root.inputItem.select(0, firstColon);
-            } else if (root.adjustUnit === "seconds") {
-                root.inputItem.select(lastColon + 1, str.length);
-            } else {
-                root.adjustUnit = "minutes";
-                root.inputItem.select(firstColon + 1, lastColon);
-            }
-        } else if (parts.length === 2) {
-            if (root.adjustUnit === "hours") {
-                root.adjustUnit = "minutes";
-            }
-            var colonIdx = str.indexOf(":");
-            if (root.adjustUnit === "seconds") {
-                root.inputItem.select(colonIdx + 1, str.length);
-            } else {
-                root.adjustUnit = "minutes";
-                root.inputItem.select(0, colonIdx);
-            }
-        } else {
-            root.inputItem.selectAll();
-        }
     }
 
     function applyDigit(d) {
@@ -393,6 +246,74 @@ PlasmoidItem {
         }
     }
 
+    function selectActiveUnit() {
+        if (!root.inputItem || !root.inputItem.visible) return;
+        if (!root.inputItem.activeFocus) {
+            root.inputItem.forceActiveFocus();
+        }
+        var str = root.inputItem.text;
+        var parts = str.split(":");
+        if (parts.length === 3) {
+            var firstColon = str.indexOf(":");
+            var lastColon = str.lastIndexOf(":");
+            if (root.adjustUnit === "hours") {
+                root.inputItem.select(0, firstColon);
+            } else if (root.adjustUnit === "seconds") {
+                root.inputItem.select(lastColon + 1, str.length);
+            } else {
+                root.adjustUnit = "minutes";
+                root.inputItem.select(firstColon + 1, lastColon);
+            }
+        } else if (parts.length === 2) {
+            if (root.adjustUnit === "hours") {
+                root.adjustUnit = "minutes";
+            }
+            var colonIdx = str.indexOf(":");
+            if (root.adjustUnit === "seconds") {
+                root.inputItem.select(colonIdx + 1, str.length);
+            } else {
+                root.adjustUnit = "minutes";
+                root.inputItem.select(0, colonIdx);
+            }
+        } else {
+            root.inputItem.selectAll();
+        }
+    }
+
+    function selectNextUnit() {
+        root.digitBuffer = "";
+        var sec = (root.isRunning && root.isPaused) ? root.remainingSeconds : root.totalSeconds;
+        var str = root.inputItem ? root.inputItem.text : root.formatTime(sec);
+        var parts = str.split(":");
+        if (parts.length === 3) {
+            if (root.adjustUnit === "hours") {
+                root.adjustUnit = "minutes";
+            } else if (root.adjustUnit === "minutes") {
+                root.adjustUnit = "seconds";
+            }
+        } else {
+            root.adjustUnit = "seconds";
+        }
+        root.selectActiveUnit();
+    }
+
+    function selectPreviousUnit() {
+        root.digitBuffer = "";
+        var sec = (root.isRunning && root.isPaused) ? root.remainingSeconds : root.totalSeconds;
+        var str = root.inputItem ? root.inputItem.text : root.formatTime(sec);
+        var parts = str.split(":");
+        if (parts.length === 3) {
+            if (root.adjustUnit === "seconds") {
+                root.adjustUnit = "minutes";
+            } else if (root.adjustUnit === "minutes") {
+                root.adjustUnit = "hours";
+            }
+        } else {
+            root.adjustUnit = "minutes";
+        }
+        root.selectActiveUnit();
+    }
+
     function focusInput() {
         Qt.callLater(() => {
             if (root.inputItem && root.inputItem.visible) {
@@ -402,6 +323,85 @@ PlasmoidItem {
                 root.selectActiveUnit();
             }
         });
+    }
+
+    function onTimerFinished() {
+        plasmoid.configuration.runningEndTime = 0;
+        plasmoid.configuration.pausedSeconds = 0;
+        var soundPath = root.resolveSoundPath();
+        executable.exec("paplay --property=media.role=alarm --volume=" + root.maxPulseVolume + " \"" + soundPath + "\" || pw-play --media-role=Notification --media-category=Playback --volume=1.0 \"" + soundPath + "\"");
+    }
+
+    function resolveSoundPath() {
+        var localUrl = Qt.resolvedUrl("../sounds/alarm-clock-elapsed.oga").toString();
+        if (localUrl.startsWith("file://")) {
+            return decodeURIComponent(localUrl.substring(7));
+        }
+        return "/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga";
+    }
+
+    function parseTimeInput(str) {
+        var limit = (typeof root !== "undefined" && root.maxSeconds) ? root.maxSeconds : 86400;
+        var maxUnit = (typeof root !== "undefined" && root.maxMinutesOrSeconds) ? root.maxMinutesOrSeconds : 59;
+        str = ("" + str).trim().toLowerCase();
+        if (!str) return 0;
+
+        if (str.includes(":")) {
+            var parts = str.split(":");
+            if (parts.length === 2) {
+                if (!/^\d*$/.test(parts[0]) || !/^\d*$/.test(parts[1])) return -1;
+                var m = parseInt(parts[0]) || 0;
+                var s = parseInt(parts[1]) || 0;
+                s = Math.min(maxUnit, Math.max(0, s));
+                m = Math.max(0, m);
+                return Math.min(limit, (m * 60) + s);
+            } else if (parts.length === 3) {
+                if (!/^\d*$/.test(parts[0]) || !/^\d*$/.test(parts[1]) || !/^\d*$/.test(parts[2])) return -1;
+                var h = parseInt(parts[0]) || 0;
+                var m = parseInt(parts[1]) || 0;
+                var s = parseInt(parts[2]) || 0;
+                s = Math.min(maxUnit, Math.max(0, s));
+                m = Math.min(maxUnit, Math.max(0, m));
+                h = Math.max(0, h);
+                return Math.min(limit, (h * 3600) + (m * 60) + s);
+            }
+            return -1;
+        }
+
+        var total = 0;
+        var matched = false;
+        var hMatch = str.match(/(\d+)\s*h/);
+        if (hMatch) { total += parseInt(hMatch[1]) * 3600; matched = true; }
+        var mMatch = str.match(/(\d+)\s*m/);
+        if (mMatch) { total += parseInt(mMatch[1]) * 60; matched = true; }
+        var sMatch = str.match(/(\d+)\s*s/);
+        if (sMatch) { total += parseInt(sMatch[1]); matched = true; }
+
+        if (matched) {
+            var stripped = str.replace(/\d+\s*h/g, "").replace(/\d+\s*m/g, "").replace(/\d+\s*s/g, "").trim();
+            if (stripped.length > 0) return -1;
+            return Math.min(limit, total);
+        }
+
+        if (/^\d+$/.test(str)) {
+            var num = parseInt(str);
+            if (!isNaN(num) && num >= 0) {
+                return Math.min(limit, num * 60);
+            }
+        }
+        return -1;
+    }
+
+    function formatTime(sec) {
+        sec = Math.max(0, parseInt(sec) || 0);
+        var h = Math.floor(sec / 3600);
+        var m = Math.floor((sec % 3600) / 60);
+        var s = sec % 60;
+        var pad = function(n) { return n < 10 ? "0" + n : "" + n; };
+        if (h > 0) {
+            return pad(h) + ":" + pad(m) + ":" + pad(s);
+        }
+        return pad(m) + ":" + pad(s);
     }
 
     Timer {
