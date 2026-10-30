@@ -10,9 +10,22 @@ Item {
     required property var timer
     required property var configuration
 
-    implicitWidth: Math.round(Kirigami.Units.gridUnit * 17.5)
-    implicitHeight: Math.round(Kirigami.Units.gridUnit * 9)
-    Layout.minimumWidth: Math.round(Kirigami.Units.gridUnit * 16.5)
+    readonly property real popupGridWidth: 17.5
+    readonly property real popupGridHeight: 9.0
+    readonly property real minGridWidth: 16.5
+    readonly property real timerBoxGridHeight: 3.5
+    readonly property real actionButtonGridHeight: 2.2
+
+    readonly property int timeFontSixDigits: 28
+    readonly property int timeFontFourDigits: 36
+
+    readonly property real splitRatioHours: 0.33
+    readonly property real splitRatioMinutes: 0.66
+    readonly property real splitRatioTwoPart: 0.50
+
+    implicitWidth: Math.round(Kirigami.Units.gridUnit * popupGridWidth)
+    implicitHeight: Math.round(Kirigami.Units.gridUnit * popupGridHeight)
+    Layout.minimumWidth: Math.round(Kirigami.Units.gridUnit * minGridWidth)
     Layout.minimumHeight: implicitHeight
     Layout.preferredWidth: implicitWidth
     Layout.preferredHeight: implicitHeight
@@ -134,7 +147,7 @@ Item {
                 visible: full.timer.isRunning && !full.timer.isPaused
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.minimumHeight: Kirigami.Units.gridUnit * 3.5
+                Layout.minimumHeight: Kirigami.Units.gridUnit * full.timerBoxGridHeight
                 color: Kirigami.Theme.alternateBackgroundColor
                 radius: Kirigami.Units.smallSpacing
 
@@ -142,7 +155,7 @@ Item {
                     anchors.centerIn: parent
                     text: full.timer.formatTime(full.timer.remainingSeconds)
                     font.family: "Noto Sans"
-                    font.pointSize: text.length > 5 ? 28 : 36
+                    font.pointSize: text.length > 5 ? full.timeFontSixDigits : full.timeFontFourDigits
                     font.weight: Font.Normal
                     color: Kirigami.Theme.highlightColor
                 }
@@ -167,9 +180,9 @@ Item {
                 visible: !full.timer.isRunning || full.timer.isPaused
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.minimumHeight: Kirigami.Units.gridUnit * 3.5
+                Layout.minimumHeight: Kirigami.Units.gridUnit * full.timerBoxGridHeight
                 font.family: "Noto Sans"
-                font.pointSize: text.length > 5 ? 28 : 36
+                font.pointSize: text.length > 5 ? full.timeFontSixDigits : full.timeFontFourDigits
                 font.weight: Font.Normal
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: TextInput.AlignVCenter
@@ -190,11 +203,11 @@ Item {
                         var parts = customInput.text.split(":");
                         var ratio = mouse.x / width;
                         if (parts.length === 3) {
-                            if (ratio < 0.33) full.timer.adjustUnit = "hours";
-                            else if (ratio < 0.66) full.timer.adjustUnit = "minutes";
+                            if (ratio < full.splitRatioHours) full.timer.adjustUnit = "hours";
+                            else if (ratio < full.splitRatioMinutes) full.timer.adjustUnit = "minutes";
                             else full.timer.adjustUnit = "seconds";
                         } else {
-                            if (ratio < 0.5) full.timer.adjustUnit = "minutes";
+                            if (ratio < full.splitRatioTwoPart) full.timer.adjustUnit = "minutes";
                             else full.timer.adjustUnit = "seconds";
                         }
                         full.timer.digitBuffer = "";
@@ -320,7 +333,7 @@ Item {
             QQC2.Button {
                 id: actionBtn
                 Layout.fillWidth: true
-                Layout.preferredHeight: Kirigami.Units.gridUnit * 2.2
+                Layout.preferredHeight: Kirigami.Units.gridUnit * full.actionButtonGridHeight
                 text: !full.timer.isRunning ? i18n("Start") : (full.timer.isPaused ? i18n("Resume") : i18n("Pause"))
                 icon.name: !full.timer.isRunning ? "media-playback-start" : (full.timer.isPaused ? "media-playback-start" : "media-playback-pause")
                 highlighted: true
@@ -385,7 +398,7 @@ Item {
 
             QQC2.Button {
                 Layout.fillWidth: true
-                Layout.preferredHeight: Kirigami.Units.gridUnit * 2.2
+                Layout.preferredHeight: Kirigami.Units.gridUnit * full.actionButtonGridHeight
                 text: i18n("Reset (R)")
                 icon.name: "media-playback-stop"
                 focusPolicy: Qt.NoFocus

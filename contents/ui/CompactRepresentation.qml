@@ -11,18 +11,27 @@ MouseArea {
     required property PlasmoidItem timer
     required property var configuration
 
+    readonly property int fallbackPanelThickness: 28
+    readonly property int fallbackIconSize: 26
+    readonly property int fallbackFontSize: 13
+    readonly property int minIconSize: 24
+    readonly property int minFontSize: 9
+    readonly property int maxFontSize: 22
+    readonly property real fontScaleRatio: 0.35
+    readonly property int verticalPadding: 8
+
     readonly property bool isVertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property int panelThickness: isVertical
-        ? (compactRoot.width > 0 ? compactRoot.width : (compactRoot.timer.width > 0 ? compactRoot.timer.width : 28))
-        : (compactRoot.height > 0 ? compactRoot.height : (compactRoot.timer.height > 0 ? compactRoot.timer.height : 28))
+        ? (compactRoot.width > 0 ? compactRoot.width : (compactRoot.timer.width > 0 ? compactRoot.timer.width : compactRoot.fallbackPanelThickness))
+        : (compactRoot.height > 0 ? compactRoot.height : (compactRoot.timer.height > 0 ? compactRoot.timer.height : compactRoot.fallbackPanelThickness))
 
     readonly property bool autoScale: compactRoot.configuration.autoScale !== undefined ? compactRoot.configuration.autoScale : true
     readonly property int iconSize: compactRoot.autoScale
         ? compactRoot.calcAutoIconSize(compactRoot.panelThickness)
-        : (compactRoot.configuration.iconSize > 0 ? compactRoot.configuration.iconSize : 26)
+        : (compactRoot.configuration.iconSize > 0 ? compactRoot.configuration.iconSize : compactRoot.fallbackIconSize)
     readonly property int fontSize: compactRoot.autoScale
         ? compactRoot.calcAutoFontSize(compactRoot.panelThickness)
-        : (compactRoot.configuration.timerFontSize > 0 ? compactRoot.configuration.timerFontSize : 13)
+        : (compactRoot.configuration.timerFontSize > 0 ? compactRoot.configuration.timerFontSize : compactRoot.fallbackFontSize)
 
     readonly property bool effectiveTintIcon: compactRoot.configuration.tintIcon !== undefined ? compactRoot.configuration.tintIcon : true
     readonly property var presetIconMap: ({
@@ -48,7 +57,7 @@ MouseArea {
     Layout.minimumHeight: Kirigami.Units.iconSizes.small
     Layout.preferredWidth: {
         if (compactRoot.isVertical) {
-            return compactRoot.timer.isRunning ? Math.max(compactRoot.panelThickness, timerLabel.implicitWidth + 8) : compactRoot.panelThickness;
+            return compactRoot.timer.isRunning ? Math.max(compactRoot.panelThickness, timerLabel.implicitWidth + compactRoot.verticalPadding) : compactRoot.panelThickness;
         }
         if (compactRoot.timer.isRunning) {
             return timerLabel.implicitWidth + Kirigami.Units.smallSpacing * 2;
@@ -72,12 +81,12 @@ MouseArea {
     }
 
     function calcAutoIconSize(thickness) {
-        return Math.max(24, thickness > 0 ? thickness : 28);
+        return Math.max(compactRoot.minIconSize, thickness > 0 ? thickness : compactRoot.fallbackPanelThickness);
     }
 
     function calcAutoFontSize(thickness) {
-        var t = thickness > 0 ? thickness : 28;
-        return Math.max(9, Qt.application.font.pointSize, Math.min(22, Math.round(t * 0.35)));
+        var t = thickness > 0 ? thickness : compactRoot.fallbackPanelThickness;
+        return Math.max(compactRoot.minFontSize, Qt.application.font.pointSize, Math.min(compactRoot.maxFontSize, Math.round(t * compactRoot.fontScaleRatio)));
     }
 
     Keys.onSpacePressed: event => {

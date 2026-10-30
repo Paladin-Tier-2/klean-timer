@@ -5,7 +5,18 @@ import org.kde.plasma.plasma5support as Plasma5Support
 PlasmoidItem {
     id: root
 
-    property int totalSeconds: (plasmoid.configuration.lastSeconds !== undefined && plasmoid.configuration.lastSeconds >= 0) ? plasmoid.configuration.lastSeconds : 300
+    readonly property int maxSeconds: 86400
+    readonly property int defaultSeconds: 300
+    readonly property int timerIntervalMs: 1000
+    readonly property int maxPulseVolume: 65536
+    readonly property int shiftHourStep: 5
+    readonly property int shiftMinuteStep: 5
+    readonly property int shiftSecondStep: 10
+    readonly property int unitNormalStep: 1
+    readonly property int maxHours: 23
+    readonly property int maxMinutesOrSeconds: 59
+
+    property int totalSeconds: (plasmoid.configuration.lastSeconds !== undefined && plasmoid.configuration.lastSeconds >= 0) ? plasmoid.configuration.lastSeconds : root.defaultSeconds
     property real targetEndTime: plasmoid.configuration.runningEndTime > 0 ? plasmoid.configuration.runningEndTime : 0
     property int remainingSeconds: plasmoid.configuration.pausedSeconds > 0
         ? plasmoid.configuration.pausedSeconds
@@ -46,6 +57,8 @@ PlasmoidItem {
     }
 
     function parseTimeInput(str) {
+        var limit = (typeof root !== "undefined" && root.maxSeconds) ? root.maxSeconds : 86400;
+        var maxUnit = (typeof root !== "undefined" && root.maxMinutesOrSeconds) ? root.maxMinutesOrSeconds : 59;
         str = ("" + str).trim().toLowerCase();
         if (!str) return 0;
 
@@ -55,18 +68,18 @@ PlasmoidItem {
                 if (!/^\d*$/.test(parts[0]) || !/^\d*$/.test(parts[1])) return -1;
                 var m = parseInt(parts[0]) || 0;
                 var s = parseInt(parts[1]) || 0;
-                s = Math.min(59, Math.max(0, s));
+                s = Math.min(maxUnit, Math.max(0, s));
                 m = Math.max(0, m);
-                return Math.min(86400, (m * 60) + s);
+                return Math.min(limit, (m * 60) + s);
             } else if (parts.length === 3) {
                 if (!/^\d*$/.test(parts[0]) || !/^\d*$/.test(parts[1]) || !/^\d*$/.test(parts[2])) return -1;
                 var h = parseInt(parts[0]) || 0;
                 var m = parseInt(parts[1]) || 0;
                 var s = parseInt(parts[2]) || 0;
-                s = Math.min(59, Math.max(0, s));
-                m = Math.min(59, Math.max(0, m));
+                s = Math.min(maxUnit, Math.max(0, s));
+                m = Math.min(maxUnit, Math.max(0, m));
                 h = Math.max(0, h);
-                return Math.min(86400, (h * 3600) + (m * 60) + s);
+                return Math.min(limit, (h * 3600) + (m * 60) + s);
             }
             return -1;
         }
@@ -83,13 +96,13 @@ PlasmoidItem {
         if (matched) {
             var stripped = str.replace(/\d+\s*h/g, "").replace(/\d+\s*m/g, "").replace(/\d+\s*s/g, "").trim();
             if (stripped.length > 0) return -1;
-            return Math.min(86400, total);
+            return Math.min(limit, total);
         }
 
         if (/^\d+$/.test(str)) {
             var num = parseInt(str);
             if (!isNaN(num) && num >= 0) {
-                return Math.min(86400, num * 60);
+                return Math.min(limit, num * 60);
             }
         }
         return -1;
@@ -97,7 +110,8 @@ PlasmoidItem {
 
     function startTimer(seconds) {
         if (seconds > 0) {
-            root.totalSeconds = Math.min(86400, seconds);
+            var limit = (root && root.maxSeconds) || 86400;
+            root.totalSeconds = Math.min(limit, seconds);
             plasmoid.configuration.lastSeconds = root.totalSeconds;
             root.remainingSeconds = root.totalSeconds;
             root.targetEndTime = Date.now() + (root.totalSeconds * 1000);
@@ -171,18 +185,20 @@ PlasmoidItem {
             }
         }
 
+        var normalStep = (root && root.unitNormalStep) || 1;
+        var limit = (root && root.maxSeconds) || 86400;
         var delta = 0;
         if (root.adjustUnit === "hours") {
-            delta = (isShift ? 5 : 1) * 3600;
+            delta = (isShift ? ((root && root.shiftHourStep) || 5) : normalStep) * 3600;
         } else if (root.adjustUnit === "minutes") {
-            delta = (isShift ? 5 : 1) * 60;
+            delta = (isShift ? ((root && root.shiftMinuteStep) || 5) : normalStep) * 60;
         } else {
-            delta = (isShift ? 10 : 1);
+            delta = (isShift ? ((root && root.shiftSecondStep) || 10) : normalStep);
         }
         var totalChange = stepDirection * delta;
 
         if (root.isRunning) {
-            root.remainingSeconds = Math.min(86400, Math.max(1, root.remainingSeconds + totalChange));
+            root.remainingSeconds = Math.min(limit, Math.max(1, root.remainingSeconds + totalChange));
             if (!root.isPaused) {
                 root.targetEndTime = Date.now() + (root.remainingSeconds * 1000);
                 plasmoid.configuration.runningEndTime = root.targetEndTime;
@@ -194,7 +210,7 @@ PlasmoidItem {
                 root.selectActiveUnit();
             }
         } else {
-            root.totalSeconds = Math.min(86400, Math.max(0, root.totalSeconds + totalChange));
+            root.totalSeconds = Math.min(limit, Math.max(0, root.totalSeconds + totalChange));
             plasmoid.configuration.lastSeconds = root.totalSeconds;
             if (root.inputItem) {
                 root.inputItem.text = root.formatTime(root.totalSeconds);
@@ -250,9 +266,11 @@ PlasmoidItem {
         } else {
             var val2 = parseInt(root.digitBuffer + d);
             root.digitBuffer = "";
-            if (root.adjustUnit === "hours") h = Math.min(23, val2);
-            else if (root.adjustUnit === "minutes") m = Math.min(59, val2);
-            else s = Math.min(59, val2);
+            var maxH = (root && root.maxHours) || 23;
+            var maxMS = (root && root.maxMinutesOrSeconds) || 59;
+            if (root.adjustUnit === "hours") h = Math.min(maxH, val2);
+            else if (root.adjustUnit === "minutes") m = Math.min(maxMS, val2);
+            else s = Math.min(maxMS, val2);
         }
         var nextSec = (h * 3600) + (m * 60) + s;
         if (root.isRunning && root.isPaused) {
@@ -383,12 +401,12 @@ PlasmoidItem {
         plasmoid.configuration.runningEndTime = 0;
         plasmoid.configuration.pausedSeconds = 0;
         var soundPath = root.resolveSoundPath();
-        executable.exec("paplay --property=media.role=alarm --volume=65536 \"" + soundPath + "\" || pw-play --media-role=Notification --media-category=Playback --volume=1.0 \"" + soundPath + "\"");
+        executable.exec("paplay --property=media.role=alarm --volume=" + root.maxPulseVolume + " \"" + soundPath + "\" || pw-play --media-role=Notification --media-category=Playback --volume=1.0 \"" + soundPath + "\"");
     }
 
     Timer {
         id: countdownTimer
-        interval: 1000
+        interval: root.timerIntervalMs
         repeat: true
         running: root.isRunning && !root.isPaused
         onTriggered: {
