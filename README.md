@@ -2,6 +2,16 @@
 
 A compact countdown widget for KDE Plasma 6. I made it because I couldn't find a timer that was small enough for my panel, quick to set, and usable from the keyboard. The remaining time stays visible on the panel, so I can check it at a glance. When time runs out, a sound plays.
 
+<p align="center">
+  <img src="screenshots/popup-editing.png" width="200" />
+  &nbsp;&nbsp;
+  <img src="screenshots/popup-running.png" width="200" />
+</p>
+
+<p align="center">
+  <img src="screenshots/panel-running.png" />
+</p>
+
 ## USE
 
 Click the widget to open the timer. Type a duration and press **Enter** to start.
