@@ -15,6 +15,12 @@ PlasmoidItem {
     readonly property int unitNormalStep: 1
     readonly property int maxHours: 23
     readonly property int maxMinutesOrSeconds: 59
+    readonly property int wheelAngleStep: 120
+    readonly property int wheelPixelStep: 40
+
+    property real wheelAngleRemainder: 0
+    property real wheelPixelRemainder: 0
+    property int wheelModifiers: 0
 
     property int totalSeconds: (plasmoid.configuration.lastSeconds !== undefined && plasmoid.configuration.lastSeconds >= 0) ? plasmoid.configuration.lastSeconds : root.defaultSeconds
     property real targetEndTime: plasmoid.configuration.runningEndTime > 0 ? plasmoid.configuration.runningEndTime : 0
@@ -142,7 +148,18 @@ PlasmoidItem {
         var totalChange = stepDirection * delta;
 
         if (root.isRunning) {
-            root.remainingSeconds = Math.min(limit, Math.max(1, root.remainingSeconds + totalChange));
+            var currentSeconds = root.isPaused
+                ? root.remainingSeconds
+                : Math.max(0, Math.ceil((root.targetEndTime - Date.now()) / 1000));
+            if (!root.isPaused && currentSeconds === 0) {
+                root.remainingSeconds = 0;
+                root.isRunning = false;
+                root.isPaused = false;
+                root.targetEndTime = 0;
+                root.onTimerFinished();
+                return;
+            }
+            root.remainingSeconds = Math.min(limit, Math.max(1, currentSeconds + totalChange));
             if (!root.isPaused) {
                 root.targetEndTime = Date.now() + (root.remainingSeconds * 1000);
                 plasmoid.configuration.runningEndTime = root.targetEndTime;
@@ -160,6 +177,35 @@ PlasmoidItem {
                 root.inputItem.text = root.formatTime(root.totalSeconds);
                 root.selectActiveUnit();
             }
+        }
+    }
+
+    function handleWheel(angleY, pixelY, modifiers) {
+        var mode = modifiers & (Qt.ControlModifier | Qt.ShiftModifier);
+        if (mode !== root.wheelModifiers) {
+            root.wheelAngleRemainder = 0;
+            root.wheelPixelRemainder = 0;
+            root.wheelModifiers = mode;
+        }
+
+        var steps = 0;
+        if (Number.isFinite(angleY) && angleY !== 0) {
+            root.wheelAngleRemainder += angleY;
+            steps = Math.trunc(root.wheelAngleRemainder / root.wheelAngleStep);
+            root.wheelAngleRemainder -= steps * root.wheelAngleStep;
+            root.wheelPixelRemainder = 0;
+        } else if (Number.isFinite(pixelY) && pixelY !== 0) {
+            root.wheelPixelRemainder += pixelY;
+            steps = Math.trunc(root.wheelPixelRemainder / root.wheelPixelStep);
+            root.wheelPixelRemainder -= steps * root.wheelPixelStep;
+            root.wheelAngleRemainder = 0;
+        }
+
+        if (steps === 0) return;
+        if (mode & Qt.ControlModifier) {
+            root.adjustSeconds(steps, !!(mode & Qt.ShiftModifier));
+        } else {
+            root.adjustMinutes(steps, !!(mode & Qt.ShiftModifier));
         }
     }
 
@@ -326,8 +372,13 @@ PlasmoidItem {
     function onTimerFinished() {
         plasmoid.configuration.runningEndTime = 0;
         plasmoid.configuration.pausedSeconds = 0;
-        var soundPath = root.resolveSoundPath();
-        executable.exec("paplay --property=media.role=alarm --volume=" + root.maxPulseVolume + " \"" + soundPath + "\" || pw-play --media-role=Notification --media-category=Playback --volume=1.0 \"" + soundPath + "\"");
+        // Escape apostrophes when passing a filename as a shell single-quoted argument.
+        var soundPath = "'" + root.resolveSoundPath().replace(/'/g, "'\\''") + "'";
+        var fallbackPath = "'/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga'";
+        var paplay = "paplay --property=media.role=alarm --volume=" + root.maxPulseVolume + " ";
+        var pwplay = "pw-play --media-role=Notification --media-category=Playback --volume=1.0 ";
+        executable.exec(paplay + soundPath + " || " + pwplay + soundPath
+            + " || " + paplay + fallbackPath + " || " + pwplay + fallbackPath);
     }
 
     function resolveSoundPath() {

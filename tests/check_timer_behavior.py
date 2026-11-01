@@ -3,6 +3,7 @@
 
 import os
 import re
+import shlex
 import sys
 import tempfile
 from pathlib import Path
@@ -730,6 +731,102 @@ def test_timer_finished_audio_command():
     print("PASS: onTimerFinished uses prioritized alarm/notification audio pipeline")
 
 
+
+def test_wheel_accumulation_and_modifiers():
+    source = SOURCE.read_text()
+    engine = QJSEngine()
+    functions = "\n".join(
+        block_at(source, name)
+        for name in ("function handleWheel(", "function adjustMinutes(", "function adjustSeconds(")
+    )
+    js = """
+        var Qt = { ControlModifier: 0x04000000, ShiftModifier: 0x02000000 };
+        var root = {
+            wheelAngleRemainder: 0, wheelPixelRemainder: 0, wheelModifiers: 0,
+            wheelAngleStep: 120, wheelPixelStep: 40,
+            changes: [],
+            adjustMinutes: function(n, shift) { this.changes.push(["m", n, shift]); },
+            adjustSeconds: function(n, shift) { this.changes.push(["s", n, shift]); }
+        };
+        root.handleWheel = handleWheel;
+        root.handleWheel(0, 0, 0);
+        root.handleWheel(0, undefined, 0);
+        root.handleWheel(undefined, undefined, 0);
+        root.handleWheel(60, 0, 0);
+        root.handleWheel(60, 0, 0);
+        root.handleWheel(0, 15, 0);
+        root.handleWheel(0, 25, 0);
+        root.handleWheel(-240, 0, Qt.ControlModifier | Qt.ShiftModifier);
+        root.changes;
+    """
+    result = engine.evaluate(functions + "\n" + js)
+    assert not result.isError(), result.toString()
+    assert result.toVariant() == [
+        ["m", 1, False], ["m", 1, False], ["s", -2, True]
+    ]
+    assert "wheel.pixelDelta ? wheel.pixelDelta.y : 0" in (
+        Path(__file__).parents[1] / "contents/ui/CompactRepresentation.qml"
+    ).read_text()
+    full_source = FULL_SOURCE.read_text()
+    assert "full.timer.handleWheel(event.angleDelta.y, event.pixelDelta ? event.pixelDelta.y : 0, event.modifiers)" in full_source
+    assert "full.timer.handleWheel(wheel.angleDelta.y, wheel.pixelDelta ? wheel.pixelDelta.y : 0, wheel.modifiers)" in full_source
+
+
+def test_running_adjustment_uses_deadline():
+    source = SOURCE.read_text()
+    engine = QJSEngine()
+    fn = block_at(source, "function adjustTime(")
+    js = """
+        var now = 2000000;
+        Date.now = function() { return now; };
+        var plasmoid = {configuration: {runningEndTime: 0, pausedSeconds: 0}};
+        var root = {
+            isRunning: true, isPaused: false, remainingSeconds: 250,
+            targetEndTime: now + 10000, adjustUnit: "seconds", digitBuffer: "",
+            inputItem: null, onTimerFinished: function() { this.finished = true; }
+        };
+        root.adjustTime = adjustTime;
+        root.adjustTime(1, false);
+        var correct = root.remainingSeconds === 11
+            && plasmoid.configuration.runningEndTime === root.targetEndTime
+            && root.targetEndTime === now + 11000;
+        root.targetEndTime = now - 1000;
+        root.remainingSeconds = 40;
+        root.adjustTime(1, false);
+        [correct, root.remainingSeconds, root.isRunning, root.finished === true];
+    """
+    result = engine.evaluate(fn + "\n" + js)
+    assert not result.isError(), result.toString()
+    assert result.toVariant() == [True, 0, False, True]
+
+
+def test_alarm_fallback_command():
+    source = SOURCE.read_text()
+    fn = block_at(source, "function onTimerFinished()")
+    engine = QJSEngine()
+    js = """
+        var command = "";
+        var plasmoid = {configuration: {}};
+        var executable = {exec: function(c) { command = c; }};
+        var root = {
+            maxPulseVolume: 65536,
+            resolveSoundPath: function() { return "/tmp/audio's alarm.oga"; }
+        };
+        root.onTimerFinished = onTimerFinished;
+        root.onTimerFinished();
+        command;
+    """
+    result = engine.evaluate(fn + "\n" + js)
+    assert not result.isError(), result.toString()
+    command = result.toString()
+    assert "alarm-clock-elapsed.oga" in command
+    assert command.count("paplay ") == 2 and command.count("pw-play ") == 2
+    assert command.index("/tmp/audio") < command.index("/usr/share/sounds/")
+    assert shlex.split(command).count("/tmp/audio's alarm.oga") == 2
+    assert shlex.split(command).count("/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga") == 2
+
+
+
 def main():
     app = QGuiApplication.instance() or QGuiApplication([])
     test_parse_time_input()
@@ -743,6 +840,9 @@ def main():
     test_paused_state_shows_highlight_box()
     test_hours_navigation_and_adjustment()
     test_timer_finished_audio_command()
+    test_wheel_accumulation_and_modifiers()
+    test_running_adjustment_uses_deadline()
+    test_alarm_fallback_command()
     print("ALL TESTS PASSED!")
 
 

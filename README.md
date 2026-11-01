@@ -41,7 +41,7 @@ Click the widget to open the timer. Type a duration and press **Enter** to start
 ### Option A: Development (Live Symlink)
 
 ```sh
-git clone https://github.com/<username>/klean-timer.git
+git clone https://github.com/Paladin-Tier-2/klean-timer.git
 cd klean-timer
 mkdir -p ~/.local/share/plasma/plasmoids
 ln -sfn "$(pwd)" ~/.local/share/plasma/plasmoids/com.eko.kleantimer
@@ -56,7 +56,7 @@ ln -sfn "$(pwd)" ~/.local/share/plasma/plasmoids/com.eko.kleantimer
 To install as an isolated package copy:
 
 ```sh
-git clone https://github.com/<username>/klean-timer.git
+git clone https://github.com/Paladin-Tier-2/klean-timer.git
 cd klean-timer
 kpackagetool6 --type Plasma/Applet --install .
 ```
@@ -74,4 +74,4 @@ Don't forget to bind the "activate widget" to a global shortcut so you can trigg
 
 ## Finish cue
 
-The alert sound is bundled in the repository at `contents/sounds/alarm-clock-elapsed.oga` and played using `pw-play` or `paplay`. You can customize or replace this file with any audio file of your choice. If the bundled file is removed, it automatically falls back to `/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga`.
+The alert sound is bundled in the repository at `contents/sounds/alarm-clock-elapsed.oga` and played using `pw-play` or `paplay`. You can customize or replace this file with any audio file of your choice. If playback of the bundled file fails, the player tries the system sound at `/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga`.
