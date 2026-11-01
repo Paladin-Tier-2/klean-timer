@@ -1,4 +1,4 @@
-# Clean Timer
+# Klean Timer
 
 A compact countdown widget for KDE Plasma 6. I made it because I couldn't find a timer that was small enough for my panel, quick to set, and usable from the keyboard. The remaining time stays visible on the panel, so I can check it at a glance. When time runs out, a sound plays.
 
@@ -41,10 +41,10 @@ Click the widget to open the timer. Type a duration and press **Enter** to start
 ### Option A: Development (Live Symlink)
 
 ```sh
-git clone https://github.com/<username>/clean-timer.git
-cd clean-timer
+git clone https://github.com/<username>/klean-timer.git
+cd klean-timer
 mkdir -p ~/.local/share/plasma/plasmoids
-ln -sfn "$(pwd)" ~/.local/share/plasma/plasmoids/com.eko.cleantimer
+ln -sfn "$(pwd)" ~/.local/share/plasma/plasmoids/com.eko.kleantimer
 ./reload.sh
 ```
 
@@ -56,8 +56,8 @@ ln -sfn "$(pwd)" ~/.local/share/plasma/plasmoids/com.eko.cleantimer
 To install as an isolated package copy:
 
 ```sh
-git clone https://github.com/<username>/clean-timer.git
-cd clean-timer
+git clone https://github.com/<username>/klean-timer.git
+cd klean-timer
 kpackagetool6 --type Plasma/Applet --install .
 ```
 
@@ -68,7 +68,7 @@ kpackagetool6 --type Plasma/Applet --install .
 After installing with either option:
 
 1. Right click your panel, and click **Add or Manage Widgets** 
-2. Search for **Clean Timer** and add it to wherever you want.
+2. Search for **Klean Timer** and add it to wherever you want.
 
 Don't forget to bind the "activate widget" to a global shortcut so you can trigger popup anytime you want. The best way to use it.
 

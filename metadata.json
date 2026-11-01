@@ -8,8 +8,8 @@
         "Category": "Date and Time",
         "Description": "Minimal custom timer with typeable duration",
         "Icon": "chronometer",
-        "Id": "com.eko.cleantimer",
-        "Name": "Clean Timer",
+        "Id": "com.eko.kleantimer",
+        "Name": "Klean Timer",
         "Version": "1.0.0"
     },
     "KPackageStructure": "Plasma/Applet",
