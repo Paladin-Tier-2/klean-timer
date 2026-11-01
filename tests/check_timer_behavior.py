@@ -767,7 +767,9 @@ def test_wheel_accumulation_and_modifiers():
     assert "wheel.pixelDelta ? wheel.pixelDelta.y : 0" in (
         Path(__file__).parents[1] / "contents/ui/CompactRepresentation.qml"
     ).read_text()
-    assert "event.pixelDelta ? event.pixelDelta.y : 0" in FULL_SOURCE.read_text()
+    full_source = FULL_SOURCE.read_text()
+    assert "full.timer.handleWheel(event.angleDelta.y, event.pixelDelta ? event.pixelDelta.y : 0, event.modifiers)" in full_source
+    assert "full.timer.handleWheel(wheel.angleDelta.y, wheel.pixelDelta ? wheel.pixelDelta.y : 0, wheel.modifiers)" in full_source
 
 
 def test_running_adjustment_uses_deadline():
@@ -785,7 +787,9 @@ def test_running_adjustment_uses_deadline():
         };
         root.adjustTime = adjustTime;
         root.adjustTime(1, false);
-        var correct = root.remainingSeconds === 11;
+        var correct = root.remainingSeconds === 11
+            && plasmoid.configuration.runningEndTime === root.targetEndTime
+            && root.targetEndTime === now + 11000;
         root.targetEndTime = now - 1000;
         root.remainingSeconds = 40;
         root.adjustTime(1, false);
@@ -817,6 +821,7 @@ def test_alarm_fallback_command():
     command = result.toString()
     assert "alarm-clock-elapsed.oga" in command
     assert command.count("paplay ") == 2 and command.count("pw-play ") == 2
+    assert command.index("/tmp/audio") < command.index("/usr/share/sounds/")
     assert shlex.split(command).count("/tmp/audio's alarm.oga") == 2
     assert shlex.split(command).count("/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga") == 2
 
