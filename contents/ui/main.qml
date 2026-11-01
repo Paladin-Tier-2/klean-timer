@@ -189,12 +189,12 @@ PlasmoidItem {
         }
 
         var steps = 0;
-        if (angleY !== 0) {
+        if (Number.isFinite(angleY) && angleY !== 0) {
             root.wheelAngleRemainder += angleY;
             steps = Math.trunc(root.wheelAngleRemainder / root.wheelAngleStep);
             root.wheelAngleRemainder -= steps * root.wheelAngleStep;
             root.wheelPixelRemainder = 0;
-        } else if (pixelY !== 0) {
+        } else if (Number.isFinite(pixelY) && pixelY !== 0) {
             root.wheelPixelRemainder += pixelY;
             steps = Math.trunc(root.wheelPixelRemainder / root.wheelPixelStep);
             root.wheelPixelRemainder -= steps * root.wheelPixelStep;
@@ -372,6 +372,7 @@ PlasmoidItem {
     function onTimerFinished() {
         plasmoid.configuration.runningEndTime = 0;
         plasmoid.configuration.pausedSeconds = 0;
+        // Escape apostrophes when passing a filename as a shell single-quoted argument.
         var soundPath = "'" + root.resolveSoundPath().replace(/'/g, "'\\''") + "'";
         var fallbackPath = "'/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga'";
         var paplay = "paplay --property=media.role=alarm --volume=" + root.maxPulseVolume + " ";
