@@ -124,7 +124,7 @@ MouseArea {
     }
 
     onWheel: wheel => {
-        compactRoot.timer.handleWheel(wheel.angleDelta.y, wheel.pixelDelta.y, wheel.modifiers);
+        compactRoot.timer.handleWheel(wheel.angleDelta.y, wheel.pixelDelta ? wheel.pixelDelta.y : 0, wheel.modifiers);
     }
 
     Item {
