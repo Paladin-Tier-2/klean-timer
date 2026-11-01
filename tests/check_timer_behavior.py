@@ -3,6 +3,7 @@
 
 import os
 import re
+import shlex
 import sys
 import tempfile
 from pathlib import Path
@@ -749,6 +750,8 @@ def test_wheel_accumulation_and_modifiers():
         };
         root.handleWheel = handleWheel;
         root.handleWheel(0, 0, 0);
+        root.handleWheel(0, undefined, 0);
+        root.handleWheel(undefined, undefined, 0);
         root.handleWheel(60, 0, 0);
         root.handleWheel(60, 0, 0);
         root.handleWheel(0, 15, 0);
@@ -761,10 +764,10 @@ def test_wheel_accumulation_and_modifiers():
     assert result.toVariant() == [
         ["m", 1, False], ["m", 1, False], ["s", -2, True]
     ]
-    assert "handleWheel(wheel.angleDelta.y, wheel.pixelDelta.y, wheel.modifiers)" in (
+    assert "wheel.pixelDelta ? wheel.pixelDelta.y : 0" in (
         Path(__file__).parents[1] / "contents/ui/CompactRepresentation.qml"
     ).read_text()
-    assert "handleWheel(event.angleDelta.y, event.pixelDelta.y, event.modifiers)" in FULL_SOURCE.read_text()
+    assert "event.pixelDelta ? event.pixelDelta.y : 0" in FULL_SOURCE.read_text()
 
 
 def test_running_adjustment_uses_deadline():
@@ -814,7 +817,8 @@ def test_alarm_fallback_command():
     command = result.toString()
     assert "alarm-clock-elapsed.oga" in command
     assert command.count("paplay ") == 2 and command.count("pw-play ") == 2
-    assert "'\\\\''" in command, command
+    assert shlex.split(command).count("/tmp/audio's alarm.oga") == 2
+    assert shlex.split(command).count("/usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga") == 2
 
 
 
