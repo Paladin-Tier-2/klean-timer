@@ -124,13 +124,7 @@ MouseArea {
     }
 
     onWheel: wheel => {
-        var dir = wheel.angleDelta.y > 0 ? 1 : -1;
-        var isShift = wheel.modifiers & Qt.ShiftModifier;
-        if (wheel.modifiers & Qt.ControlModifier) {
-            compactRoot.timer.adjustSeconds(dir, isShift);
-        } else {
-            compactRoot.timer.adjustMinutes(dir, isShift);
-        }
+        compactRoot.timer.handleWheel(wheel.angleDelta.y, wheel.pixelDelta.y, wheel.modifiers);
     }
 
     Item {
